@@ -296,7 +296,8 @@ struct ProfileFinalConfigurationSnapshot: Equatable, Sendable {
         sourceYAML: String?,
         effectiveYAML: String?,
         omittedRules: [String] = [],
-        omittedPersonalRules: [String] = []
+        omittedPersonalRules: [String] = [],
+        omittedGlobalRules: [String] = []
     ) -> ProfileFinalConfigurationSnapshot {
         let sourceText = presentedText(sourceYAML)
         let effectiveText = presentedText(effectiveYAML)
@@ -318,6 +319,14 @@ struct ProfileFinalConfigurationSnapshot: Equatable, Sendable {
                 title: "Custom Rules Not in Effect",
                 detail: "Each of these rules names a policy this configuration does not define, so it is left out and its traffic follows the rules below it. Route the rule to one of this configuration's policy groups, or switch to a rule scheme that has that one.",
                 lines: omittedPersonalRules
+            ))
+        }
+        if !omittedGlobalRules.isEmpty {
+            adapted.append(.init(
+                id: "omitted-global-rules",
+                title: "Global Rules Not in Effect",
+                detail: "Each of these app-level rules names a policy this configuration does not define, so it is left out here and still applies to configurations that have that policy. Route the rule to a policy group this configuration has, or turn the rule off in Client Settings.",
+                lines: omittedGlobalRules
             ))
         }
         return ProfileFinalConfigurationSnapshot(

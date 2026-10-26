@@ -8067,6 +8067,11 @@ private struct ClashMacRuntimeConfigurationPage: View, Equatable {
                     ProfileRuntimeConfigBuilder.personalRulesLeftOut(of: $0, profile: captured)
                 } ?? []
             }.value
+            let omittedGlobalRules = await Task.detached(priority: .userInitiated) {
+                texts.effective.map {
+                    ProfileRuntimeConfigBuilder.globalRulesLeftOut(of: $0)
+                } ?? []
+            }.value
             async let baseTask: String? = Task.detached(
                 priority: .userInitiated
             ) {
@@ -8083,7 +8088,8 @@ private struct ClashMacRuntimeConfigurationPage: View, Equatable {
                     sourceYAML: texts.source,
                     effectiveYAML: texts.effective,
                     omittedRules: omittedRules,
-                    omittedPersonalRules: omittedPersonalRules
+                    omittedPersonalRules: omittedPersonalRules,
+                    omittedGlobalRules: omittedGlobalRules
                 )
             }.value
             inputs = await Inputs(

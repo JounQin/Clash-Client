@@ -8,6 +8,7 @@ import SwiftUI
 private enum ClientSettingsDoor: String, Identifiable {
     case udpFallback
     case externalController
+    case globalRules
     var id: String { rawValue }
 }
 
@@ -199,6 +200,22 @@ struct ClientSettingsView: View {
                 Text("The app sends this when it downloads a Profile URL. Downloads the core makes for a configuration use that configuration’s Download User-Agent. Clash is recommended; FlClash is a compatibility fallback for panels that negotiate by client name.")
             }
 
+            Section {
+                ClashDoorLink(ClientSettingsDoor.globalRules, selection: $doorSelection) {
+                    GlobalRulesView(restageRuntime: restageRuntime)
+                } label: {
+                    HStack {
+                        Text(clash: .copy("Global Rules"))
+                        Spacer()
+                        Text(clash: .copy(globalRulesSummary))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .accessibilityIdentifier("client.global-rules")
+            } footer: {
+                Text("Rules that are checked before every configuration's own rules. They are kept outside the profile, so source and scheme updates cannot drop them.")
+            }
+
             if let externalController {
                 Section {
                     ClashDoorLink(ClientSettingsDoor.externalController, selection: $doorSelection) {
@@ -261,12 +278,19 @@ struct ClientSettingsView: View {
         
         .clashDoorPresenter(
             selection: $doorSelection,
-            title: { door in door == .externalController ? "External Controller" : "UDP Fallback" }
+            title: { door in
+                switch door {
+                case .udpFallback: "UDP Fallback"
+                case .externalController: "External Controller"
+                case .globalRules: "Global Rules"
+                }
+            }
         ) { door in
             switch door {
             case .udpFallback: udpFallbackDestination
             case .externalController:
                 if let externalController { ExternalControllerSettingsView(core: externalController) }
+            case .globalRules: GlobalRulesView(restageRuntime: restageRuntime)
             }
         }
         .onAppear {
@@ -317,6 +341,12 @@ struct ClientSettingsView: View {
     }
 
      
+    private var globalRulesSummary: String {
+        let config = GlobalRulesConfig.load()
+        guard config.isEnabled, !config.rules.isEmpty else { return "Off" }
+        return "\(config.rules.count) rules"
+    }
+
     private var udpFallbackSummary: String {
         switch udpFallback {
         case .quic: "Reject QUIC"
